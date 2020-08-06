@@ -337,7 +337,7 @@ div[id^=mapid] {
 
 .emergency-alert {
 	border: solid #ff0000 1pt;
-	border-radius: 10px;
+	border-radius: 5px;
 }
 
 .scrollable-checkbox {
@@ -367,7 +367,7 @@ div[id^=mapid] {
 }
 
 .home-toggle-btn {
-	width: 25%;
+	width: 30%;
 }
 
 .notice {
@@ -426,4 +426,13 @@ div[id^=mapid] {
 
 .pad-5 {
 	padding: .5rem;
+}
+
+.mlr-0 {
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+.comm-bg {
+	background-color: #ccd1d5;
 }

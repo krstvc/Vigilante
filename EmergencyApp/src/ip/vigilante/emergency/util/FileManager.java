@@ -11,6 +11,8 @@ import javax.servlet.http.Part;
 
 public class FileManager {
 	
+	private static PropertiesManager props = PropertiesManager.getInstance();
+	
 	public static String saveFile(String username, Part part) {
 		String returnPath = "images/";
 		Random rand = new Random();
@@ -26,7 +28,7 @@ public class FileManager {
 			do {
 				String suffix = "" + rand.nextInt();
 				fileName = username + suffix + extension;
-				fullFileName = "E:\\Projects\\Java\\IP\\EmergencyApp\\WebContent\\images\\" + fileName;
+				fullFileName = props.getProperty("emergency_app_path") + fileName;
 				file = new File(fullFileName);
 			} while(file.exists());
 			returnPath += fileName;

@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:b="http://bootsfaces.net/ui">
+
+	<ui:composition>
+		
+		<div id="users-div">
+			<div id="stats-div">
+				<br />
+				<h:outputText id="total-users-label" value="Total user count: #{home.userCount} users" styleClass="mt-4 mb-2" />
+				<br />
+				<h:outputText id="online-users-label" value="Currently online: #{home.onlineUserCount} users" styleClass="mt-2 mb-4" />
+			</div>
+			
+			<hr />
+			
+			<div id="chart-div" class="container chart-canvas-bg">
+				<canvas id="activity-canvas" class="chart-canvas-bg" />
+			</div>
+			
+			<div id="users-table-div" class="jumbotron mt-2">
+				<h:form>
+					<h5 class="ml-2 mr-2 mb-4">All users</h5>
+					<h:dataTable id="users-table" styleClass="table" value="#{home.users}" var="user" columnClasses="mycol-1,mycol-2,mycol-3,mycol-4">
+						<h:column>
+							<f:facet name="header">First name</f:facet>
+							<h:outputText value="#{user.name}" />
+						</h:column>
+						<h:column>
+							<f:facet name="header">Last name</f:facet>
+							<h:outputText value="#{user.surname}" />
+						</h:column>
+						<h:column>
+							<f:facet name="header">Username</f:facet>
+							<h:outputText value="#{user.username}" />
+						</h:column>
+						<h:column>
+							<f:facet name="header">Actions</f:facet>
+							<h:commandButton value="Block" styleClass="btn btn-outline-primary ml-2 mr-2 action-btn" action="#{home.blockUser}" disabled="#{user.blocked}">
+								<f:param name="id" value="#{user.id}" />
+								<f:ajax execute="@form" render="@form" onevent="showBlockAlert" />
+							</h:commandButton>
+							<h:commandButton value="Reset password" styleClass="btn btn-outline-primary ml-2 mr-2 action-btn" action="#{home.passwordReset}" disabled="#{user.blocked}">
+								<f:param name="id" value="#{user.id}" />
+								<f:ajax execute="@form" render="@form" onevent="showResetAlert" />
+							</h:commandButton>
+						</h:column>
+					</h:dataTable>
+				</h:form>
+			</div>
+			
+			<div id="non-approved-users-table-div" class="jumbotron mt-2">
+				<h:form id="non-approved-form">
+					<h5 class="ml-2 mr-2 mb-4">Non-approved users</h5>
+					<h:dataTable id="non-approved-users-table" styleClass="table" value="#{home.nonApprovedUsers}" var="user" columnClasses="mycol-1,mycol-2,mycol-3,mycol-4">
+						<h:column>
+							<f:facet name="header">First name</f:facet>
+							<h:outputText value="#{user.name}" />
+						</h:column>
+						<h:column>
+							<f:facet name="header">Last name</f:facet>
+							<h:outputText value="#{user.surname}" />
+						</h:column>
+						<h:column>
+							<f:facet name="header">Username</f:facet>
+							<h:outputText value="#{user.username}" />
+						</h:column>
+						<h:column>
+							<f:facet name="header">Actions</f:facet>
+							<h:commandButton value="Approve" action="#{home.approveUser}" styleClass="btn btn-outline-primary ml-2 mr-2 action-btn">
+								<f:param name="id" value="#{user.id}" />
+								<f:ajax execute="@form" render="@all" />
+							</h:commandButton>
+						</h:column>
+					</h:dataTable>
+				</h:form>
+			</div>
+		</div>
+		
+	</ui:composition>
+	
+</html>

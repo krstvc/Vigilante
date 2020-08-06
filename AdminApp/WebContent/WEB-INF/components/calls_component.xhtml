@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:composition>
+	
+		<div id="calls-div">
+			<div class="jumbotron">
+				<h5 class="ml-2 mr-2 mb-4">Add new emergency call category</h5>
+				<div id="add-category-div" class="horizontal-form col-md-6">
+					<h:form id="add-category-form">
+						<h:panelGroup layout="block" styleClass="form-horizontal">
+							<h:panelGroup layout="block" styleClass="form-group">
+								<h:outputLabel styleClass="control-label">Category name</h:outputLabel>
+								<h:panelGroup>
+									<h:inputText id="category-name-input" styleClass="form-control" value="#{home.categoryName}" required="true" requiredMessage="Category name is required" />
+									<h:message for="category-name-input" styleClass="text-danger mt-2 mb-2" />
+								</h:panelGroup>
+							</h:panelGroup>
+							
+							<h:panelGroup layout="block" styleClass="form-group">
+								<h:panelGroup>
+									<h:commandLink id="add-category-btn" styleClass="btn btn-primary" action="#{home.addCategory}" value="Add category">
+										<f:ajax execute="@form" render="@all" />
+									</h:commandLink>
+								</h:panelGroup>
+							</h:panelGroup>
+						</h:panelGroup>
+					</h:form>
+				</div>
+				<br />
+				<hr />
+				<br />
+				<div id="categories-div">
+					<h:form id="categoriesTableForm">
+						<h5 class="ml-2 mr-2 mb-4">Categories of emergency calls</h5>
+						<h:dataTable id="categoriesTable" styleClass="table" value="#{home.callCategories}" var="category">
+							<h:column>
+								<f:facet name="header">Category name</f:facet>
+								<h:outputText value="#{category.category}" />
+							</h:column>
+							<h:column>
+								<f:facet name="header">Actions</f:facet>
+								<h:commandButton id="delete-category-btn" styleClass="btn btn-outline-primary" action="#{home.deleteCategory}" value="Delete">
+									<f:param name="id" value="#{category.id}" />
+									<f:ajax execute="@form" render="@form" />
+								</h:commandButton>
+							</h:column>
+						</h:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<hr />
+		
+			<div id="users-table-div" class="jumbotron mt-2">
+				<h:form id="emergency-calls-form">
+					<h5 class="ml-2 mr-2 mb-4">Emergency calls</h5>
+					<c:forEach var="call" items="#{home.emergencyCalls}">
+						<div class="card mt-4 mb-4">
+							<div class="card-header card-header-m0 row">
+								<div class="col-md-10">
+									<h:outputText value="#{call.title}" />
+								</div>
+								<div class="col-md-2">
+									<h:commandButton id="delete-post-btn" styleClass="btn btn-outline-primary" action="#{home.deleteEmergencyCall}" value="Delete">
+										<f:param name="id" value="#{call.id}" />
+										<f:ajax execute="@form" render="@form" />
+									</h:commandButton>
+								</div>
+							</div>
+							<div class="card-body">
+								<div class="card-text">
+									<h:outputText value="#{call.description}" />
+									<hr />
+									<h:outputText value="Category: #{call.callCategoryString}" />
+									<hr />
+									<h:outputText value="#{call.reportCount} times reported" />
+									<hr />
+									<h:outputText value="Time: #{call.timeFormatted}" />
+								</div>
+								<c:if test="#{not empty call.location}">
+									<hr />
+									<div class="map" id="map-#{call.id}">
+										<script>
+											drawMap("map-#{call.id}", "#{call.location}");
+										</script>
+									</div>
+								</c:if>
+								<c:if test="#{not empty call.imageURI}">
+									<hr />
+									<h:graphicImage url="#{call.imageURI}" width="480" height="360" />
+								</c:if>
+							</div>
+						</div>
+					</c:forEach>
+				</h:form>
+			</div>
+		</div>
+		
+	</ui:composition>
+</html>

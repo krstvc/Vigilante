@@ -1,5 +1,5 @@
-<%@tag import="ip.vigilante.emergency.services.UserService"%>
-<%@tag import="ip.vigilante.emergency.model.User"%>
+<%@tag import="ip.vigilante.service.UserService"%>
+<%@tag import="ip.vigilante.model.User"%>
 <%@ tag description="Generic page template" language="java" pageEncoding="UTF-8"%>
 <%@attribute name="header" fragment="true" %>
 <%@attribute name="footer" fragment="true" %>
@@ -62,7 +62,7 @@
 
 				<div class="collapse navbar-collapse" id="menu-links">
 					<ul class="navbar-nav ml-auto">
-						<c:if test = "${user != null}">
+						<c:if test = "${user != null && user.isApproved()}">
 							<li class="nav-item">
 								<a class="nav-link" href="/EmergencyApp/profile">Profile</a>
 							</li>
@@ -70,7 +70,7 @@
 								<a class="nav-link" href="/EmergencyApp/logout">Sign out</a>
 							</li>
 						</c:if>
-						<c:if test = "${user == null}">
+						<c:if test = "${user == null || !user.isApproved()}">
 							<li class="nav-item">
 								<a class="nav-link" href="/EmergencyApp/register">Register</a>
 							</li>

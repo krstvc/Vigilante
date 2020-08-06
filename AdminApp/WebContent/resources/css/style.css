@@ -1,0 +1,51 @@
+.admin-app-style {
+	background-color: #888888;
+    color: white;
+}
+
+.form-signin {
+    width: 480px;
+    max-width: 480px;
+    padding: 10px;
+    margin: 0 auto;
+}
+
+.jumbotron-custom {
+	background-color: #b8b8b8;
+	color: black;
+}
+
+.chart-canvas-bg {
+	width: 768px;
+	height: 360px;
+}
+
+.action-btn {
+	width: 140px;
+}
+
+.mycol-1 {
+	width: 22%;
+}
+
+.mycol-2 {
+	width: 22%;
+}
+
+.mycol-3 {
+	width: 22%;
+}
+
+.mycol-4 {
+	width: 33%;
+}
+
+.map {
+	width: 480px;
+	height: 360px;
+}
+
+.card-header-m0 {
+	margin-left: 0px;
+	margin-right: 0px;
+}

@@ -5,10 +5,10 @@ import java.util.HashMap;
 
 import javax.servlet.http.HttpSession;
 
-import ip.vigilante.emergency.model.Login;
-import ip.vigilante.emergency.model.User;
-import ip.vigilante.emergency.services.LoginService;
-import ip.vigilante.emergency.services.UserService;
+import ip.vigilante.model.Login;
+import ip.vigilante.model.User;
+import ip.vigilante.service.LoginService;
+import ip.vigilante.service.UserService;
 
 public class AuthenticationManager {
 	
@@ -27,18 +27,22 @@ public class AuthenticationManager {
 	public static boolean login(int userId, HttpSession session) {
 		boolean ret = false;
 		
-		Login login = new Login(0, userId, new Date(), null);
-		boolean logged = loginSvc.addLogin(login);
-		
 		User user = userSvc.getUserById(userId);
-		user.setLogged(true);
-		user.setLoginCount(user.getLoginCount() + 1);
-		boolean updated = userSvc.updateUser(user);
+		if(user.isApproved()) {
+			Login login = new Login(0, userId, new Date(), null);
+			boolean logged = loginSvc.addLogin(login);
+			
+			user.setLogged(true);
+			user.setLoginCount(user.getLoginCount() + 1);
+			boolean updated = userSvc.updateUser(user);
+			
+			activeSessions.put(session.getId(), login);
+			
+			ret = logged && updated;
+		}
 		
 		session.setAttribute("userId", userId);
-		activeSessions.put(session.getId(), login);
 		
-		ret = logged && updated;
 		return ret;
 	}
 	
@@ -48,8 +52,12 @@ public class AuthenticationManager {
 		int userId = (int)session.getAttribute("userId");
 		
 		Login login = activeSessions.get(session.getId());
-		login.setLogoutTime(new Date());
-		boolean loginUpdated = loginSvc.updateLogin(login);
+		boolean loginUpdated = true;
+		
+		if(login != null) {
+			login.setLogoutTime(new Date());
+			loginUpdated = loginSvc.updateLogin(login);
+		}
 		
 		User user = userSvc.getUserById(userId);
 		user.setLogged(false);
@@ -63,7 +71,9 @@ public class AuthenticationManager {
 	}
 	
 	public static boolean register(User user, HttpSession session) {
-		return userSvc.addUser(user);
+		boolean ret = userSvc.addUser(user);
+		session.setAttribute("userId", user.getId());
+		return ret;
 	}
 
 }

@@ -1,16 +1,16 @@
-<%@page import="ip.vigilante.emergency.services.PostCommentService"%>
-<%@page import="ip.vigilante.emergency.model.EmergencyCategory"%>
-<%@page import="ip.vigilante.emergency.services.EmergencyCategoryService"%>
-<%@page import="ip.vigilante.emergency.services.ImageService"%>
-<%@page import="ip.vigilante.emergency.model.Image"%>
-<%@page import="ip.vigilante.emergency.model.Post"%>
-<%@page import="java.util.ArrayList"%>
-<%@page import="ip.vigilante.emergency.services.PostService"%>
-<%@page import="ip.vigilante.emergency.services.UserService"%>
-<%@page import="ip.vigilante.emergency.model.User"%>
+<%@page import="ip.vigilante.service.PostCommentService"%>
+<%@page import="ip.vigilante.model.EmergencyCategory"%>
+<%@page import="ip.vigilante.service.EmergencyCategoryService"%>
+<%@page import="ip.vigilante.service.ImageService"%>
+<%@page import="ip.vigilante.model.Image"%>
+<%@page import="ip.vigilante.model.Post"%>
+<%@page import="ip.vigilante.service.PostService"%>
+<%@page import="ip.vigilante.service.UserService"%>
+<%@page import="ip.vigilante.model.User"%>
 <%@page import="ip.vigilante.emergency.util.UrlManager" %>
 <%@page import="ip.vigilante.emergency.util.PropertiesManager" %>
 <%@page import="ip.vigilante.emergency.util.RSSManager" %>
+<%@page import="java.util.ArrayList"%>
 <%@page import="java.net.URLEncoder" %>
 <%@page import="java.nio.charset.StandardCharsets" %>
 <%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
@@ -106,7 +106,7 @@
 					<div id="posts-feed">
 						<div class="post-bg p-2 mb-4 ml-3 mr-3">
 							<strong class="fs-14 btn btn-outline-primary btn-block" id="createToggleBtn">Create new post</strong>
-							<form id="createPostForm" action="post" method="POST" class="no-display">
+							<form id="createPostForm" action="post" method="POST" class="no-display" enctype="multipart/form-data">
 								<hr />
 								<div class="form-group mb-2">
 									<label for="titleInput" class="fs-14"><strong>Post title</strong></label>
@@ -125,6 +125,7 @@
 		    						<label class="custom-file-label" for="choosePicBtn">Choose images</label>
 								</div>
 								<hr />
+								<input type="hidden" id="videoType" name="videoType" value="upload" />
 								<div class="form-group mb-2 text-center">
 									<button type="button" id="uploadToggleBtn" class="btn btn-secondary home-toggle-btn" disabled="disabled">Upload video</button>
 									<button type="button" id="urlToggleBtn" class="btn btn-secondary home-toggle-btn">Enter video URL</button>
@@ -179,292 +180,217 @@
 						</div>
 						<hr />
 						
-						<c:forEach var="item" items="${posts}">
-							<c:set var="itemId" value="${item.id}" />
-							<c:set var="userId" value="${item.userId}" />
-							<c:set var="postUser" value="${userSvc.getUserById(userId)}" />
-							
-							<div id="post-${itemId}" class="card ml-2 mr-2 mt-4 mb-4 tab-card">
-								<div class="m-2 row">
-									<div class="col-md-1 col-xs-1">
-										<div class="picture-container">
-											<div class="picture-xs align-items-center">
-												<img id="profilePic" src="${postUser.hasImage() ? postUser.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
-											</div>
-										</div>
-									</div>
-									<div class="col-md-11 col-xs-11 row align-items-center">
-										<span class="col-xs-8 col-md-8 fs-16"><strong>${postUser.name} ${postUser.surname}</strong></span>
-										<span class="col-xs-3 col-md-3 fs-12">${item.getTimeFormatted()}</span>
-										<span class="col-xs-1 col-md-1"><a href="/EmergencyApp/postDetails.jsp?id=${item.id}"><i class="fa fa-external-link" aria-hidden="true"></i></a></span>
-									</div>
-								</div>
-								<div class="card-header tab-card-header">
-									<ul class="nav nav-tabs card-header-tabs post-nav" id="post-tab-${itemId}" role="tablist">
-										<li class="nav-item">
-											<a class="nav-link active" id="content-tab-${itemId}" data-toggle="tab" href="#content-${itemId}" role="tab" aria-controls="content-${itemId}" aria-selected="true">Content</a>
-										</li>
-										
-										<c:set var="images" value="${imgSvc.getImagesForPost(item.id)}" />
-										<c:if test="${images != null && images.size() > 0}">
-											<li class="nav-item">
-												<a class="nav-link" id="images-tab-${itemId}" data-toggle="tab" href="#images-${itemId}" role="tab" aria-controls="images-${itemId}" aria-selected="false">Images</a>
-											</li>
-										</c:if>
-										
-										<c:if test="${item.videoURI != null && item.videoURI.length() > 0}">
-											<li class="nav-item">
-												<a class="nav-link" id="video-tab-${itemId}" data-toggle="tab" href="#video-${itemId}" role="tab" aria-controls="video-${itemId}" aria-selected="false">Video</a>
-											</li>
-										</c:if>
-										
-										<c:if test="${item.location != null && item.location.length() > 0}">
-											<li class="nav-item">
-												<a class="nav-link" id="location-tab-${itemId}" data-toggle="tab" href="#location-${itemId}" role="tab" aria-controls="location-${itemId}" aria-selected="false">Location</a>
-											</li>
-										</c:if>
-										
-										<li class="nav-item">
-											<a class="nav-link" id="categories-tab-${itemId}" data-toggle="tab" href="#categories-${itemId}" role="tab" aria-controls="categories-${itemId}" aria-selected="false">Categories</a>
-										</li>
-										
-										<li class="nav-item">
-											<a class="nav-link" id="comments-tab-${itemId}" data-toggle="tab" href="#comments-${itemId}" role="tab" aria-controls="comments-${itemId}" aria-selected="false">Comments</a>
-										</li>
-									</ul>
-        						</div>
-
-								<div class="card-content">
-									<div class="tab-content" id="post-tab-${itemId}-content">
-										<div class="tab-pane fade show active p-3" id="content-${itemId}" role="tabpanel" aria-labelledby="content-tab-${itemId}">
-											<h5 class="card-title" title="${item.title}">${item.title}</h5>
-											<hr />
-											<p class="card-text">${item.content}</p>
-											<c:if test="${item.link != null && item.link.length() > 0}">
-												<hr />
-												<a href="${item.link}" class="badge badge-primary ellipsis w-100" title="${item.link}">${item.link}</a>
-											</c:if>
-										</div>
-										
-										<c:if test="${images != null && images.size() > 0}">
-											<div class="tab-pane fade p-3" id="images-${itemId}" role="tabpanel" aria-labelledby="images-tab-${itemId}">
-												<div class="post-images mt-1">
-													<div id="imagesCarousel" class="carousel slide" data-ride="carousel">
-														<div class="carousel-inner">
-															<c:set var="index" value="active" />
-															<c:forEach var="image" items="${imgSvc.getImagesForPost(item.id)}">
-																<c:set var="img" value="${image}" />
-																<c:if test="${index.equals(\"active\")}" >
-																	<div class="carousel-item active">
-																		<img class="d-block w-100" src="${img.imageURI}" alt="Image" />
-																	</div>
-																</c:if>
-																<c:if test="${!index.equals(\"active\")}" >
-																	<div class="carousel-item">
-																		<img class="d-block w-100" src="${img.imageURI}" alt="Image" />
-																	</div>
-																</c:if>
-																<c:set var="index" value="inactive" />
-															</c:forEach>
-														</div>
-														<a class="carousel-control-prev" href="#imagesCarousel" role="button" data-slide="prev">
-															<span class="carousel-control-prev-icon" aria-hidden="true"></span>
-															<span class="sr-only">Previous</span>
-														</a>
-														<a class="carousel-control-next" href="#imagesCarousel" role="button" data-slide="next">
-															<span class="carousel-control-next-icon" aria-hidden="true"></span>
-															<span class="sr-only">Next</span>
-														</a>
-													</div>
-												</div>
-											</div>
-										</c:if>	
-										
-										<c:if test="${item.videoURI != null && item.videoURI.length() > 0}">
-											<div class="tab-pane fade p-3" id="video-${itemId}" role="tabpanel" aria-labelledby="video-tab-${itemId}">
-												<div class="embed-responsive embed-responsive-16by9">
-													<iframe class="embed-responsive-item" src="${item.videoURI}" allowfullscreen></iframe>
-												</div>          
-											</div>
-										</c:if>
-										
-										<c:if test="${item.location != null && item.location.length() > 0}">
-											<div class="tab-pane fade p-3" id="location-${itemId}" role="tabpanel" aria-labelledby="location-tab-${itemId}">
-												<div id="mapid-${itemId}"></div>
-												<span id="coord-${itemId}" hidden>${item.location}</span>
-											</div>
-										</c:if>
-										
-										<div class="tab-pane fade p-3" id="categories-${itemId}" role="tabpanel" aria-labelledby="categories-tab-${itemId}">
-											<c:forEach var="category" items="${postSvc.getAllEmergencyCategoriesForPost(itemId)}">
-												<div class="m-1">
-													<span class="card-text"><i class="fa fa-tag"></i>&nbsp; ${category.category}</span>
-												</div>
-											</c:forEach>    
-											<c:if test="${item.isEmergencyAlert()}">
-												<hr />
-												<div class="m-1">
-													<span class="card-text"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>&nbsp; This is an emergency!</span>
-												</div>
-											</c:if>  
-										</div>
-										
-										<div class="tab-pane fade p-3" id="comments-${itemId}" role="tabpanel" aria-labelledby="comments-tab-${itemId}">
-											<c:set var="comments" value="${commSvc.getCommentsForPost(item.id)}" />
-											
-											
-											<!-- 
-											<div class="post-comments pl-3 pr-3 pt-2 pb-2 m-2">
-												<c:set var="comments" value="${commSvc.getCommentsForPost(item.id)}" />
-												<button type="button" id="commentsbtn-${item.id}" class="btn btn-outline-primary btn-block comment-toggler mb-2 mt-2" ${comments.size() > 0 ? '' : 'disabled'}>${comments.size()} comments</button>
-												<div id="commentsdiv-${item.id}" class="no-display">
-													<c:forEach var="comment" items="${commSvc.getCommentsForPost(item.id)}">
-														<c:set var="commentUser" value="${userSvc.getUserById(comment.userId)}" />
-														<div class="comment pt-1 pl-4 pr-4 mb-1">
-															<div class="row align-items-center">
-																<div class="picture-container col-md-1">
-																	<div class="picture-xs-comment align-items-center">
-																		<img id="profilePic" src="${commentUser.hasImage() ? commentUser.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
-																	</div>
-																</div>
-																<div class="col-md-11 row align-items-center">
-																	<span class="col-md-8 fs-14"><strong>${commentUser.name} ${commentUser.surname}</strong></span>
-																	<span class="col-md-4 fs-12">${comment.getTimeFormatted()}</span>
-																</div>
-															</div>
-															<div class="comment-content p-1 mt-2 mb-2">
-																<span class="fs-12 p-2">${comment.content}</span>
-															</div>
-															<c:if test="${comment.imageURI != null && comment.imageURI.length() > 0}">
-																<div class="picture-container mb-2">
-																	<div class="align-items-center">
-																		<img src="${comment.imageURI}" alt="Comment picture" class="comment-picture-src mx-auto d-block mh-200" />
-																	</div>
-																</div>
-															</c:if>
-														</div>
-													</c:forEach>
-												</div>
-											</div>
-											 -->
-										</div>
-									</div>
-								</div>
+						<div id="posts-div">
+							<c:forEach var="item" items="${posts}">
+								<c:set var="itemId" value="${item.id}" />
+								<c:set var="userId" value="${item.userId}" />
+								<c:set var="postUser" value="${userSvc.getUserById(userId)}" />
 								
-								<div class="card-footer">
-									<span class="fb-share-button" data-href="${props.getProperty('share_target')}" data-layout="button" data-size="small">
-										<a target="_blank" 
-											href="https://www.facebook.com/sharer/sharer.php?u=${props.getEncodedProperty('share_target')}&amp;src=sdkpreparse" 
-											class="fb-xfbml-parse-ignore">
-											<i class="fa fa-facebook-square fa-2x"></i>
-										</a>
-									</span>
-									<span class="twitter-share-button">
-										<a href="https://twitter.com/intent/tweet?text=${props.getProperty('share_target')}" target="_blank">
-											<i class="fa fa-twitter-square fa-2x"></i>
-										</a>
-									</span>
-								</div>
-							</div>
-							
-							<!--  
-							<div id="notification${item.id}" class="post-bg p-2 mb-4 ml-3 mr-3">
-								<div class="post-header row p-2 m-2 align-items-center ${item.isEmergencyAlert() ? 'emergency-alert' : ''}">
-									<div class="col-md-1 col-xs-1">
-										<div class="picture-container">
-											<div class="picture-xs align-items-center">
-												<img id="profilePic" src="${postUser.hasImage() ? postUser.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
+								<div id="post-${itemId}" class="card ml-2 mr-2 mt-4 mb-4 tab-card">
+									<div class="m-2 row">
+										<div class="col-md-1 col-xs-1">
+											<div class="picture-container">
+												<div class="picture-xs align-items-center">
+													<img id="profilePic" src="${postUser.hasImage() ? postUser.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
+												</div>
 											</div>
 										</div>
-									</div>
-									<div class="col-md-11 col-xs-11 row align-items-center">
-										<span class="col-xs-8 col-md-8 fs-14"><strong>${postUser.name} ${postUser.surname}</strong></span>
-										<span class="col-xs-4 col-sm-4 fs-12">${item.getTimeFormatted()}</span>
-									</div>
-								</div>
-								<div class="post-body p-2 m-2 text-center">
-									<a href="/EmergencyApp/postDetails.jsp?id=${item.id}" class="inline-block fs-14 ellipsis w-100" title="${item.title}">${item.title}</a>
-								</div> 
-								<div class="post-body p-2 m-2">
-									<p class="fs-12">${item.content}</p>
-									<c:if test="${item.link != null && item.link.length() > 0}">
-										<hr />
-										<a href="${item.link}" class="badge badge-info ellipsis w-100" title="${item.link}">${item.link}</a>
-									</c:if>
-									<c:set var="images" value="${imgSvc.getImagesForPost(item.id)}" />
-									<c:if test="${images != null && images.size() > 0}">
-										<hr />
-										<div class="post-images mt-1">
-											<div id="imagesCarousel" class="carousel slide" data-ride="carousel">
-												<div class="carousel-inner">
-													<c:set var="index" value="active" />
-													<c:forEach var="image" items="${imgSvc.getImagesForPost(item.id)}">
-														<c:set var="img" value="${image}" />
-														<c:if test="${index.equals(\"active\")}" >
-															<div class="carousel-item active">
-																<img class="d-block w-100" src="${img.imageURI}" alt="Image" />
-															</div>
-														</c:if>
-														<c:if test="${!index.equals(\"active\")}" >
-															<div class="carousel-item">
-																<img class="d-block w-100" src="${img.imageURI}" alt="Image" />
-															</div>
-														</c:if>
-														<c:set var="index" value="inactive" />
-													</c:forEach>
-												</div>
-												<a class="carousel-control-prev" href="#imagesCarousel" role="button" data-slide="prev">
-													<span class="carousel-control-prev-icon" aria-hidden="true"></span>
-													<span class="sr-only">Previous</span>
-												</a>
-												<a class="carousel-control-next" href="#imagesCarousel" role="button" data-slide="next">
-													<span class="carousel-control-next-icon" aria-hidden="true"></span>
-													<span class="sr-only">Next</span>
-												</a>
-											</div>
+										<div class="col-md-11 col-xs-11 row align-items-center">
+											<span class="col-xs-9 col-md-9 fs-16"><strong>${postUser.name} ${postUser.surname}</strong></span>
+											<span class="col-xs-3 col-md-3 fs-12">${item.getTimeFormatted()}</span>
 										</div>
-									</c:if>
-									<c:if test="${item.videoURI != null && item.videoURI.length() > 0}">
-										<hr />
-										<div class="embed-responsive embed-responsive-16by9">
-											<iframe class="embed-responsive-item" src="${item.videoURI}" allowfullscreen></iframe>
-										</div>
-									</c:if>
-								</div>
-								<div class="post-comments pl-3 pr-3 pt-2 pb-2 m-2">
-									<c:set var="comments" value="${commSvc.getCommentsForPost(item.id)}" />
-									<button type="button" id="commentsbtn-${item.id}" class="btn btn-outline-primary btn-block comment-toggler mb-2 mt-2" ${comments.size() > 0 ? '' : 'disabled'}>${comments.size()} comments</button>
-									<div id="commentsdiv-${item.id}" class="no-display">
-										<c:forEach var="comment" items="${commSvc.getCommentsForPost(item.id)}">
-											<c:set var="commentUser" value="${userSvc.getUserById(comment.userId)}" />
-											<div class="comment pt-1 pl-4 pr-4 mb-1">
-												<div class="row align-items-center">
-													<div class="picture-container col-md-1">
-														<div class="picture-xs-comment align-items-center">
-															<img id="profilePic" src="${commentUser.hasImage() ? commentUser.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
-														</div>
-													</div>
-													<div class="col-md-11 row align-items-center">
-														<span class="col-md-8 fs-14"><strong>${commentUser.name} ${commentUser.surname}</strong></span>
-														<span class="col-md-4 fs-12">${comment.getTimeFormatted()}</span>
-													</div>
-												</div>
-												<div class="comment-content p-1 mt-2 mb-2">
-													<span class="fs-12 p-2">${comment.content}</span>
-												</div>
-												<c:if test="${comment.imageURI != null && comment.imageURI.length() > 0}">
-													<div class="picture-container mb-2">
-														<div class="align-items-center">
-															<img src="${comment.imageURI}" alt="Comment picture" class="comment-picture-src mx-auto d-block mh-200" />
-														</div>
-													</div>
+									</div>
+									<div class="card-header tab-card-header">
+										<ul class="nav nav-tabs card-header-tabs post-nav" id="post-tab-${itemId}" role="tablist">
+											<li class="nav-item">
+												<a class="nav-link active" id="content-tab-${itemId}" data-toggle="tab" href="#content-${itemId}" role="tab" aria-controls="content-${itemId}" aria-selected="true">Content</a>
+											</li>
+											
+											<c:set var="images" value="${imgSvc.getImagesForPost(item.id)}" />
+											<c:if test="${images != null && images.size() > 0}">
+												<li class="nav-item">
+													<a class="nav-link" id="images-tab-${itemId}" data-toggle="tab" href="#images-${itemId}" role="tab" aria-controls="images-${itemId}" aria-selected="false">Images</a>
+												</li>
+											</c:if>
+											
+											<c:if test="${item.videoURI != null && item.videoURI.length() > 0}">
+												<li class="nav-item">
+													<a class="nav-link" id="video-tab-${itemId}" data-toggle="tab" href="#video-${itemId}" role="tab" aria-controls="video-${itemId}" aria-selected="false">Video</a>
+												</li>
+											</c:if>
+											
+											<c:if test="${item.location != null && item.location.length() > 0}">
+												<li class="nav-item">
+													<a class="nav-link" id="location-tab-${itemId}" data-toggle="tab" href="#location-${itemId}" role="tab" aria-controls="location-${itemId}" aria-selected="false">Location</a>
+												</li>
+											</c:if>
+											
+											<li class="nav-item">
+												<a class="nav-link" id="categories-tab-${itemId}" data-toggle="tab" href="#categories-${itemId}" role="tab" aria-controls="categories-${itemId}" aria-selected="false">Categories</a>
+											</li>
+											
+											<li class="nav-item">
+												<a class="nav-link" id="comments-tab-${itemId}" data-toggle="tab" href="#comments-${itemId}" role="tab" aria-controls="comments-${itemId}" aria-selected="false">Comments</a>
+											</li>
+										</ul>
+	        						</div>
+	
+									<div class="card-content">
+										<div class="tab-content" id="post-tab-${itemId}-content">
+											<div class="tab-pane fade show active p-3" id="content-${itemId}" role="tabpanel" aria-labelledby="content-tab-${itemId}">
+												<h5 class="card-title" title="${item.title}">${item.title}</h5>
+												<hr />
+												<p class="card-text">${item.content}</p>
+												<c:if test="${item.link != null && item.link.length() > 0}">
+													<hr />
+													<a href="${item.link}" class="badge badge-primary ellipsis w-100" title="${item.link}">${item.link}</a>
 												</c:if>
 											</div>
-										</c:forEach>
+											
+											<c:if test="${images != null && images.size() > 0}">
+												<div class="tab-pane fade p-3" id="images-${itemId}" role="tabpanel" aria-labelledby="images-tab-${itemId}">
+													<div class="post-images mt-1">
+														<div id="imagesCarousel" class="carousel slide" data-ride="carousel">
+															<div class="carousel-inner">
+																<c:set var="index" value="active" />
+																<c:forEach var="image" items="${imgSvc.getImagesForPost(item.id)}">
+																	<c:set var="img" value="${image}" />
+																	<c:if test="${index.equals(\"active\")}" >
+																		<div class="carousel-item active">
+																			<img class="d-block w-100" src="${img.imageURI}" alt="Image" />
+																		</div>
+																	</c:if>
+																	<c:if test="${!index.equals(\"active\")}" >
+																		<div class="carousel-item">
+																			<img class="d-block w-100" src="${img.imageURI}" alt="Image" />
+																		</div>
+																	</c:if>
+																	<c:set var="index" value="inactive" />
+																</c:forEach>
+															</div>
+															<a class="carousel-control-prev" href="#imagesCarousel" role="button" data-slide="prev">
+																<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+																<span class="sr-only">Previous</span>
+															</a>
+															<a class="carousel-control-next" href="#imagesCarousel" role="button" data-slide="next">
+																<span class="carousel-control-next-icon" aria-hidden="true"></span>
+																<span class="sr-only">Next</span>
+															</a>
+														</div>
+													</div>
+												</div>
+											</c:if>	
+											
+											<c:if test="${item.videoURI != null && item.videoURI.length() > 0}">
+												<div class="tab-pane fade p-3" id="video-${itemId}" role="tabpanel" aria-labelledby="video-tab-${itemId}">
+													<div class="embed-responsive embed-responsive-16by9">
+														<iframe class="embed-responsive-item" src="${item.videoURI}" allowfullscreen></iframe>
+													</div>          
+												</div>
+											</c:if>
+											
+											<c:if test="${item.location != null && item.location.length() > 0}">
+												<div class="tab-pane fade p-3" id="location-${itemId}" role="tabpanel" aria-labelledby="location-tab-${itemId}">
+													<div id="mapid-${itemId}"></div>
+													<span id="coord-${itemId}" hidden>${item.location}</span>
+												</div>
+											</c:if>
+											
+											<div class="tab-pane fade p-3" id="categories-${itemId}" role="tabpanel" aria-labelledby="categories-tab-${itemId}">
+												<c:forEach var="category" items="${postSvc.getAllEmergencyCategoriesForPost(itemId)}">
+													<div class="m-1">
+														<span class="card-text"><i class="fa fa-tag"></i>&nbsp; ${category.category}</span>
+													</div>
+												</c:forEach>    
+												<c:if test="${item.isEmergencyAlert()}">
+													<hr />
+													<div class="m-1">
+														<span class="card-text"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>&nbsp; This is an emergency!</span>
+													</div>
+												</c:if>  
+											</div>
+											
+											<div class="tab-pane fade p-3 comm-bg" id="comments-${itemId}" role="tabpanel" aria-labelledby="comments-tab-${itemId}">
+												<c:set var="comments" value="${commSvc.getCommentsForPost(item.id)}" />
+												<div id="comments-div-${itemId}">
+													<c:forEach var="comment" items="${comments}">
+														<c:set var="commentUser" value="${userSvc.getUserById(comment.userId)}" />
+														<div class="card m-2" id="comment-${comment.id}">
+															<div class="card-header row mlr-0">
+																<div class="col-md-1 col-xs-1">
+																	<div class="picture-container">
+																		<div class="picture-xs align-items-center">
+																			<img id="profilePic" src="${commentUser.hasImage() ? commentUser.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
+																		</div>
+																	</div>
+																</div>
+																<div class="col-md-11 col-xs-11 row align-items-center">
+																	<span class="col-xs-8 col-md-8 fs-16"><strong>${commentUser.name} ${commentUser.surname}</strong></span>
+																	<span class="col-xs-4 col-md-4 fs-12">${comment.getTimeFormatted()}</span>
+																</div>
+															</div>
+															<div class="card-body">
+																<span class="card-text">${comment.content}</span>
+																<c:if test="${comment.imageURI != null && comment.imageURI.length() > 0}">
+																	<hr />
+																	<div class="picture-container mb-2">
+																		<div class="align-items-center">
+																			<img src="${comment.imageURI}" alt="Comment picture" class="comment-picture-src mx-auto d-block mh-200" />
+																		</div>
+																	</div>
+																</c:if>
+															</div>
+														</div>
+													</c:forEach>
+												</div>
+												<c:if test="${!postUser.id.equals(user.id)}">
+													<form action="comment" method="post" enctype="multipart/form-data" class="add-comment-form">
+														<input name="postId" type="hidden" value="${item.id}" />
+														<div class="card m-2">
+															<div class="card-header row mlr-0">
+																<div class="col-md-1 col-xs-1">
+																	<div class="picture-container">
+																		<div class="picture-xs align-items-center">
+																			<img id="profilePic" src="${user.hasImage() ? user.getImageURI() : UrlManager.DEFAULT_AVATAR_SRC}" alt="Profile picture" class="picture-src mx-auto d-block" />
+																		</div>
+																	</div>
+																</div>
+																<div class="col-md-11 col-xs-11 row align-items-center">
+																	<span class="col-xs-8 col-md-8 fs-16"><strong>${user.name} ${user.surname}</strong></span>
+																</div>
+															</div>
+															<div class="card-body">
+																<textarea name="content" rows="1" class="form-control w-100 mb-3" placeholder="Write a comment"></textarea>
+																<div class="custom-file mb-3">
+																	<input type="file" name="image" accept="image/*" class="custom-file-input" id="choosePicBtn" value="">
+										    						<label class="custom-file-label" for="choosePicBtn">Choose image</label>
+																</div>
+																<button type="submit" class="btn btn-outline-primary btn-block">Submit</button>
+															</div>
+														</div>
+													</form>
+												</c:if>
+											</div>
+										</div>
+									</div>
+									
+									<div class="card-footer">
+										<span class="fb-share-button" data-href="${props.getProperty('share_target')}" data-layout="button" data-size="small">
+											<a target="_blank" 
+												href="https://www.facebook.com/sharer/sharer.php?u=${props.getEncodedProperty('share_target')}&amp;src=sdkpreparse" 
+												class="fb-xfbml-parse-ignore">
+												<i class="fa fa-facebook-square fa-2x"></i>
+											</a>
+										</span>
+										<span class="twitter-share-button">
+											<a href="https://twitter.com/intent/tweet?text=${props.getProperty('share_target')}" target="_blank">
+												<i class="fa fa-twitter-square fa-2x"></i>
+											</a>
+										</span>
 									</div>
 								</div>
-							</div>-->
-						</c:forEach>
+							</c:forEach>
+						</div>
 					</div>
 					
 					<div id="rss-feed" class="jumbotron jumbotron-homepad no-display">
@@ -542,6 +468,53 @@
 </t:layout>
 
 <script>
+	$(function refresh(){
+		$.ajax({
+			url: "/EmergencyApp/home.jsp",
+			success: function(data){
+				var fetchedPosts = $("#posts-div div[id^=post-].card.tab-card", data);
+				var postsDiv = $("#posts-div");
+				
+				$.each(fetchedPosts, function(index){
+					var id = $(this).attr("id");
+					if($("#" + id)[0] == undefined){
+						postsDiv.prepend(this);
+					}
+				});
+			},
+			complete: function() {
+				setTimeout(refresh, 30000);
+			}
+		})
+	});
+	
+	$(".add-comment-form").submit(function(e){
+		e.preventDefault();
+		var form = this;
+		var formData = new FormData(form);
+		var commentsDiv = $(this).parent().find("div[id^=comments-div-]");
+		
+		$.ajax({
+			url: "/EmergencyApp/comment",
+			type: "POST",
+			data: formData,
+			contentType: false,
+			processData: false,
+			success: function(data){
+				var fetchedComments = $("#" + commentsDiv.attr("id") + " div.card", data);
+
+				$.each(fetchedComments, function(index){
+					var id = $(this).attr("id");
+					if($("#" + id)[0] == undefined){
+						commentsDiv.append(this);
+					}
+				});
+				
+				form.reset();
+			}
+		});
+	});
+
 	$("#profilePic").click(function(event){
 		var src = $(this).attr("src");
 		
@@ -636,6 +609,7 @@
 		$("#uploadDiv").show();
 		$("#uploadVideoInput").removeAttr("disabled");
 		$("#urlToggleBtn").removeAttr("disabled");
+		$("#videoType").val("upload");
 		$(this).attr("disabled", "disabled");
 	});
 	
@@ -645,6 +619,7 @@
 		$("#urlDiv").show();
 		$("#urlVideoInput").removeAttr("disabled");
 		$("#uploadToggleBtn").removeAttr("disabled");
+		$("#videoType").val("url");
 		$(this).attr("disabled", "disabled");
 	});
 	

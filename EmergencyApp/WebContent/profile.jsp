@@ -18,7 +18,7 @@
 						<button id="showPicBtn" type="button" data-toggle="modal" data-target="#modalImage" hidden>Show</button>
 						<div class="custom-file mt-1">
 							<input type="file" name="image" accept="image/*" class="custom-file-input" id="choosePicBtn" value="${user.imageURI}">
-    						<label class="custom-file-label" for="choosePicBtn">Choose file</label>
+    						<label class="custom-file-label" for="choosePicBtn">Choose image</label>
 						</div>
 					</div>
 					<div id="modalImage" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
